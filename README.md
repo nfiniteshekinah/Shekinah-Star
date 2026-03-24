@@ -11,6 +11,22 @@
 
 ---
 
+## Platform Screenshots
+
+| Dashboard | Dashboard |
+|-----------|-----------|
+| ![Dashboard](https://raw.githubusercontent.com/nfiniteshekinah/Shekinah-Star/main/star-dashboard.png) | ![Dashboard 2](https://raw.githubusercontent.com/nfiniteshekinah/Shekinah-Star/main/dashboard-2.png) |
+
+| Portal Entry | Subscriber Portal |
+|-------------|------------------|
+| ![Portal Entry](https://raw.githubusercontent.com/nfiniteshekinah/Shekinah-Star/main/portal-entry.png) | ![Portal](https://raw.githubusercontent.com/nfiniteshekinah/Shekinah-Star/main/portal-1.png) |
+
+| Portal | Star AI Chat |
+|--------|-------------|
+| ![Portal 2](https://raw.githubusercontent.com/nfiniteshekinah/Shekinah-Star/main/portal-2.png) | ![Chat](https://raw.githubusercontent.com/nfiniteshekinah/Shekinah-Star/main/chat.png) |
+
+---
+
 ## What is Shekinah Star?
 
 Shekinah Star is a **live, autonomous AI trading agent** deployed on Hyperliquid perpetuals. She trades real capital 24/7 using 14 professional trading strategies coordinated by a 9-agent orchestration system — built entirely custom without LangChain or CrewAI.
