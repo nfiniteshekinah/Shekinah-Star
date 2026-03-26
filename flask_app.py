@@ -808,12 +808,54 @@ def subscriber_login():
         email = data.get('email','').strip().lower()
         sub_file = '/home/ShekinahD/star_subscribers.json'
         subs = json.load(open(sub_file)) if os.path.exists(sub_file) else []
+
         for s in subs:
-            if s.get('email','').lower() == email and s.get('active'):
-                return jsonify({'found': True, 'tier': s.get('tier','observer'), 'name': s.get('name','')})
-        return jsonify({'found': False})
+            if s.get('email','').lower() == email:
+                # Complimentary and owner users ALWAYS get access — no checks
+                if s.get('complimentary') or s.get('tier') == 'owner' or s.get('comp_reason'):
+                    return jsonify({
+                        'success': True,
+                        'tier': s.get('tier','sovereign'),
+                        'name': s.get('name',''),
+                        'complimentary': True,
+                        'wallet': s.get('wallet_address',''),
+                        'stream_status': 'complimentary'
+                    })
+
+                # Suspended users — blocked but informed
+                if s.get('stream_status') == 'suspended' or not s.get('active'):
+                    return jsonify({
+                        'success': False,
+                        'error': 'suspended',
+                        'message': 'Your subscription stream has stopped and your grace period has ended. Please reactivate at shekinahstar.io/pricing. Remember to check your Hyperliquid account for any open positions.'
+                    })
+
+                # Grace period — still active, warn them
+                if s.get('grace_start') and s.get('active'):
+                    return jsonify({
+                        'success': True,
+                        'tier': s.get('tier','observer'),
+                        'name': s.get('name',''),
+                        'wallet': s.get('wallet_address',''),
+                        'stream_status': 'grace_period',
+                        'grace_expiry': s.get('grace_expiry',''),
+                        'warning': 'Your subscription stream has stopped. You are in your grace period. Mirror trading is paused. Please check your Hyperliquid account for open positions.'
+                    })
+
+                # Normal active subscriber
+                if s.get('active'):
+                    return jsonify({
+                        'success': True,
+                        'tier': s.get('tier','observer'),
+                        'name': s.get('name',''),
+                        'wallet': s.get('wallet_address',''),
+                        'stream_status': s.get('stream_status','active')
+                    })
+
+        return jsonify({'success': False, 'error': 'not_found', 'message': 'Email not found. Please subscribe at shekinahstar.io/pricing'})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @app.route('/api/subscribers')
 def get_subscribers():
@@ -1616,6 +1658,22 @@ def setup_guide():
 @app.route('/enterprise-setup')
 def enterprise_setup():
     return send_from_directory(BASE, 'star_enterprise_setup.html')
+
+@app.route('/gematria')
+def gematria():
+    return send_from_directory(BASE, 'star_gematria.html')
+
+@app.route('/sarah')
+def sarah_bio():
+    return send_from_directory(BASE, 'star_sarah.html')
+
+@app.route('/terms')
+def terms():
+    return send_from_directory(BASE, 'star_terms.html')
+
+@app.route('/privacy')
+def privacy():
+    return send_from_directory(BASE, 'star_privacy.html')
 
 @app.route('/admin')
 def admin():
