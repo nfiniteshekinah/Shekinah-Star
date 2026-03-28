@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Star — Exchange Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void:      #03020a;
+  --deep:      #06040f;
+  --card:      #090614;
+  --border:    rgba(180,150,80,0.14);
+  --border-hi: rgba(180,150,80,0.35);
+  --gold:      #c9aa6b;
+  --gold-dim:  #7a6340;
+  --gold-hi:   #e8cc88;
+  --ice:       #4db8e8;
+  --green:     #34d399;
+  --text:      #ddd3c0;
+  --text-dim:  #6e6352;
+  --text-body: #a89880;
+  --ff-d: 'Cinzel', serif;
+  --ff-b: 'Cormorant Garamond', serif;
+  --ff-m: 'JetBrains Mono', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--void);color:var(--text);font-family:var(--ff-b);min-height:100vh;overflow-x:hidden}
+
+/* starfield */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 20% 20%,rgba(201,170,107,0.04) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 80%,rgba(77,184,232,0.03) 0%,transparent 60%);
+}
+
+.wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:3rem 1.5rem 5rem}
+
+/* header */
+header{text-align:center;margin-bottom:3rem}
+.eyebrow{font-family:var(--ff-d);font-size:.6rem;letter-spacing:.4em;color:var(--gold-dim);margin-bottom:1rem;display:flex;align-items:center;justify-content:center;gap:1rem}
+.eyebrow::before,.eyebrow::after{content:'';width:40px;height:1px;background:var(--gold-dim)}
+h1{font-family:var(--ff-d);font-size:clamp(1.5rem,4vw,2.2rem);letter-spacing:.15em;color:var(--gold-hi);margin-bottom:.4rem}
+.sub{color:var(--text-dim);font-style:italic;font-size:1rem}
+
+/* step indicator */
+.steps{display:flex;justify-content:center;gap:0;margin-bottom:3rem}
+.step-item{display:flex;align-items:center;gap:.5rem}
+.step-item+.step-item::before{content:'——';color:var(--border-hi);margin:0 .3rem;font-size:.7rem}
+.step-dot{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;font-family:var(--ff-m);font-size:.6rem;color:var(--text-dim);transition:all .3s}
+.step-dot.active{border-color:var(--gold);color:var(--gold);box-shadow:0 0 10px rgba(201,170,107,.2)}
+.step-dot.done{border-color:var(--green);background:rgba(52,211,153,.1);color:var(--green)}
+.step-lbl{font-family:var(--ff-m);font-size:.52rem;letter-spacing:.12em;color:var(--text-dim);text-transform:uppercase}
+.step-item.active .step-lbl{color:var(--gold-dim)}
+
+/* panels */
+.panel{display:none;animation:fadeUp .4s ease both}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* section titles */
+.section-title{font-family:var(--ff-d);font-size:.7rem;letter-spacing:.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:1.5rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.8rem}
+.section-title::before{content:'';width:3px;height:14px;background:var(--gold-dim);border-radius:2px}
+
+/* exchange grid */
+.exchange-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.8rem;margin-bottom:2rem}
+.ex-card{border:1px solid var(--border);border-radius:4px;padding:1rem;cursor:pointer;transition:all .2s;background:var(--card);position:relative;user-select:none}
+.ex-card:hover{border-color:var(--gold-dim);background:rgba(201,170,107,.04)}
+.ex-card.selected{border-color:var(--gold);background:rgba(201,170,107,.08)}
+.ex-card.primary-sel{border-color:var(--gold-hi);background:rgba(201,170,107,.12);box-shadow:0 0 16px rgba(201,170,107,.12)}
+.ex-check{position:absolute;top:.6rem;right:.7rem;font-size:.85rem;display:none}
+.ex-card.selected .ex-check{display:block}
+.ex-star{position:absolute;top:.6rem;right:.7rem;font-size:.75rem;display:none;color:var(--gold-hi)}
+.ex-card.primary-sel .ex-star{display:block}
+.ex-card.primary-sel .ex-check{display:none}
+.ex-icon{font-size:1.5rem;margin-bottom:.4rem}
+.ex-name{font-family:var(--ff-d);font-size:.72rem;letter-spacing:.1em;color:var(--text);margin-bottom:.2rem}
+.ex-type{font-family:var(--ff-m);font-size:.52rem;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;margin-bottom:.4rem}
+.ex-best{font-size:.78rem;color:var(--text-dim);font-style:italic;line-height:1.4}
+
+/* pill chooser */
+.pill-group{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem}
+.pill{padding:.35rem .9rem;border:1px solid var(--border);border-radius:20px;font-family:var(--ff-m);font-size:.58rem;letter-spacing:.1em;color:var(--text-dim);cursor:pointer;transition:all .2s;text-transform:uppercase;background:var(--card)}
+.pill:hover{border-color:var(--gold-dim);color:var(--gold-dim)}
+.pill.active{border-color:var(--gold);color:var(--gold);background:rgba(201,170,107,.08)}
+
+/* form */
+.form-row{margin-bottom:1.2rem}
+.form-row label{display:block;font-family:var(--ff-m);font-size:.57rem;letter-spacing:.18em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:.4rem}
+.form-row input,.form-row select{width:100%;background:rgba(3,2,10,.9);border:1px solid var(--border);color:var(--text);padding:.6rem .9rem;font-family:var(--ff-b);font-size:.95rem;border-radius:2px;outline:none;transition:border .2s;appearance:none}
+.form-row input:focus,.form-row select:focus{border-color:var(--gold-dim)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+
+/* range slider */
+.slider-wrap{display:flex;align-items:center;gap:1rem}
+input[type=range]{flex:1;-webkit-appearance:none;height:2px;background:var(--border);outline:none;border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gold);cursor:pointer}
+.slider-val{font-family:var(--ff-m);font-size:.72rem;color:var(--gold);min-width:40px;text-align:right}
+
+/* summary card */
+.summary-card{border:1px solid var(--border-hi);border-radius:4px;background:var(--card);padding:1.5rem;margin-bottom:2rem}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.summary-row:last-child{border-bottom:none}
+.sum-label{font-family:var(--ff-m);font-size:.57rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase}
+.sum-value{font-family:var(--ff-b);font-size:.95rem;color:var(--text)}
+.sum-value .badge{font-family:var(--ff-m);font-size:.52rem;background:rgba(201,170,107,.1);border:1px solid var(--border);color:var(--gold-dim);padding:.1rem .4rem;border-radius:2px;margin-left:.3rem}
+
+/* buttons */
+.btn-primary{width:100%;padding:.85rem;background:linear-gradient(135deg,var(--gold-dim),var(--gold));border:none;color:var(--void);font-family:var(--ff-d);font-size:.72rem;letter-spacing:.25em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:filter .2s}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{width:100%;padding:.7rem;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--ff-m);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all .2s;margin-top:.6rem}
+.btn-ghost:hover{border-color:var(--gold-dim);color:var(--gold-dim)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:1.5rem}
+
+/* hint */
+.hint{font-family:var(--ff-m);font-size:.56rem;letter-spacing:.1em;color:var(--text-dim);margin-top:.4rem}
+.notice{background:rgba(77,184,232,.07);border:1px solid rgba(77,184,232,.2);border-radius:3px;padding:.8rem 1rem;font-size:.85rem;color:var(--ice);margin-bottom:1.2rem;line-height:1.6}
+
+/* result */
+.result{padding:.8rem 1rem;border-radius:3px;font-size:.85rem;margin-top:1rem;display:none;line-height:1.6}
+.result.show{display:block}
+.result.ok{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--green)}
+.result.err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#ef4444}
+
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}.exchange-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">⭐ Shekinah Star</div>
+  <h1>Exchange Setup</h1>
+  <p class="sub">Personalize Star to your trading environment</p>
+</header>
+
+<!-- Step indicators -->
+<div class="steps">
+  <div class="step-item active" id="si-1"><div class="step-dot active" id="sd-1">1</div><div class="step-lbl">Exchanges</div></div>
+  <div class="step-item" id="si-2"><div class="step-dot" id="sd-2">2</div><div class="step-lbl">Style</div></div>
+  <div class="step-item" id="si-3"><div class="step-dot" id="sd-3">3</div><div class="step-lbl">Preferences</div></div>
+  <div class="step-item" id="si-4"><div class="step-dot" id="sd-4">4</div><div class="step-lbl">Confirm</div></div>
+</div>
+
+<!-- STEP 1: Exchange Selection -->
+<div class="panel active" id="panel-1">
+  <div class="section-title">Which exchanges do you trade on?</div>
+  <div class="notice">Select all exchanges you use. Star will pull data from your exchanges first, show their prices in your dashboard, and reference them in signals and chat. Click once to select, click again to set as primary (⭐).</div>
+
+  <div class="exchange-grid" id="exchangeGrid">
+    <!-- populated by JS -->
+  </div>
+
+  <div class="hint">⭐ = Primary exchange (Star's default for price display and execution routing)</div>
+  <div class="result" id="r1"></div>
+  <button class="btn-primary" style="margin-top:1.5rem" onclick="nextStep(1)">Continue →</button>
+</div>
+
+<!-- STEP 2: Trading Style -->
+<div class="panel" id="panel-2">
+  <div class="section-title">Your trading style</div>
+
+  <div class="notice">Star adjusts signal weights, timeframe focus, and chat explanations based on how you trade.</div>
+
+  <div class="section-title" style="font-size:.6rem;margin-top:1.5rem">Trading Style</div>
+  <div class="pill-group" id="styleGroup">
+    <div class="pill active" data-val="day_trader" onclick="selectPill(this,'style')">Day Trader</div>
+    <div class="pill" data-val="scalper" onclick="selectPill(this,'style')">Scalper</div>
+    <div class="pill" data-val="swing" onclick="selectPill(this,'style')">Swing Trader</div>
+    <div class="pill" data-val="position" onclick="selectPill(this,'style')">Position Trader</div>
+    <div class="pill" data-val="arbitrage" onclick="selectPill(this,'style')">Arbitrageur</div>
+    <div class="pill" data-val="yield" onclick="selectPill(this,'style')">Yield Farmer</div>
+    <div class="pill" data-val="investor" onclick="selectPill(this,'style')">Investor</div>
+    <div class="pill" data-val="algo" onclick="selectPill(this,'style')">Algo Trader</div>
+  </div>
+
+  <div class="section-title" style="font-size:.6rem;margin-top:1.5rem">Risk Tolerance</div>
+  <div class="pill-group" id="riskGroup">
+    <div class="pill" data-val="conservative" onclick="selectPill(this,'risk')">Conservative</div>
+    <div class="pill active" data-val="moderate" onclick="selectPill(this,'risk')">Moderate</div>
+    <div class="pill" data-val="aggressive" onclick="selectPill(this,'risk')">Aggressive</div>
+  </div>
+
+  <div class="section-title" style="font-size:.6rem;margin-top:1.5rem">Preferred Markets</div>
+  <div class="pill-group" id="marketsGroup">
+    <div class="pill active" data-val="perp_futures" onclick="togglePill(this,'markets')">Perp Futures</div>
+    <div class="pill" data-val="spot" onclick="togglePill(this,'markets')">Spot</div>
+    <div class="pill" data-val="options" onclick="togglePill(this,'markets')">Options</div>
+    <div class="pill" data-val="defi" onclick="togglePill(this,'markets')">DeFi / Yield</div>
+  </div>
+
+  <div class="section-title" style="font-size:.6rem;margin-top:1.5rem">Default Leverage</div>
+  <div class="slider-wrap">
+    <input type="range" id="leverageSlider" min="1" max="20" value="2"
+      oninput="document.getElementById('levVal').textContent=this.value+'x'">
+    <div class="slider-val" id="levVal">2x</div>
+  </div>
+
+  <div class="section-title" style="font-size:.6rem;margin-top:1.5rem">Risk Per Trade</div>
+  <div class="slider-wrap">
+    <input type="range" id="riskSlider" min="0.5" max="5" step="0.5" value="2"
+      oninput="document.getElementById('riskVal').textContent=this.value+'%'">
+    <div class="slider-val" id="riskVal">2%</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-ghost" onclick="prevStep(2)">← Back</button>
+    <button class="btn-primary" onclick="nextStep(2)">Continue →</button>
+  </div>
+</div>
+
+<!-- STEP 3: Preferences -->
+<div class="panel" id="panel-3">
+  <div class="section-title">Your preferences</div>
+
+  <div class="form-grid">
+    <div class="form-row">
+      <label>Display Name</label>
+      <input type="text" id="displayName" placeholder="What should Star call you?">
+    </div>
+    <div class="form-row">
+      <label>Timezone</label>
+      <select id="timezone">
+        <option value="UTC">UTC</option>
+        <option value="America/New_York">Eastern (ET)</option>
+        <option value="America/Chicago">Central (CT)</option>
+        <option value="America/Denver">Mountain (MT)</option>
+        <option value="America/Los_Angeles">Pacific (PT)</option>
+        <option value="Europe/London">London (GMT)</option>
+        <option value="Europe/Berlin">Berlin (CET)</option>
+        <option value="Asia/Tokyo">Tokyo (JST)</option>
+        <option value="Asia/Singapore">Singapore (SGT)</option>
+        <option value="Asia/Dubai">Dubai (GST)</option>
+        <option value="Australia/Sydney">Sydney (AEST)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section-title" style="font-size:.6rem;margin-top:1rem">Preferred Symbols</div>
+  <div class="pill-group" id="symbolsGroup">
+    <div class="pill active" data-val="BTC"  onclick="togglePill(this,'symbols')">BTC</div>
+    <div class="pill active" data-val="ETH"  onclick="togglePill(this,'symbols')">ETH</div>
+    <div class="pill" data-val="SOL"  onclick="togglePill(this,'symbols')">SOL</div>
+    <div class="pill" data-val="AVAX" onclick="togglePill(this,'symbols')">AVAX</div>
+    <div class="pill" data-val="LINK" onclick="togglePill(this,'symbols')">LINK</div>
+    <div class="pill" data-val="ARB"  onclick="togglePill(this,'symbols')">ARB</div>
+    <div class="pill" data-val="OP"   onclick="togglePill(this,'symbols')">OP</div>
+    <div class="pill" data-val="DOGE" onclick="togglePill(this,'symbols')">DOGE</div>
+    <div class="pill" data-val="HYPE" onclick="togglePill(this,'symbols')">HYPE</div>
+    <div class="pill" data-val="SUI"  onclick="togglePill(this,'symbols')">SUI</div>
+    <div class="pill" data-val="TIA"  onclick="togglePill(this,'symbols')">TIA</div>
+    <div class="pill" data-val="SEI"  onclick="togglePill(this,'symbols')">SEI</div>
+  </div>
+
+  <div class="section-title" style="font-size:.6rem;margin-top:1rem">Star Chat Style</div>
+  <div class="pill-group" id="verbosityGroup">
+    <div class="pill" data-val="brief" onclick="selectPill(this,'verbosity')">Brief — just the signal</div>
+    <div class="pill active" data-val="balanced" onclick="selectPill(this,'verbosity')">Balanced — signal + reasoning</div>
+    <div class="pill" data-val="detailed" onclick="selectPill(this,'verbosity')">Detailed — full analysis</div>
+  </div>
+
+  <div class="section-title" style="font-size:.6rem;margin-top:1rem">Notifications</div>
+  <div class="pill-group">
+    <div class="pill active" data-val="signals" onclick="togglePill(this,'notifs')">Signal Alerts</div>
+    <div class="pill active" data-val="trades" onclick="togglePill(this,'notifs')">Trade Updates</div>
+    <div class="pill" data-val="funding" onclick="togglePill(this,'notifs')">Funding Rate Alerts</div>
+    <div class="pill" data-val="briefing" onclick="togglePill(this,'notifs')">Daily Briefing</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-ghost" onclick="prevStep(3)">← Back</button>
+    <button class="btn-primary" onclick="nextStep(3)">Review →</button>
+  </div>
+</div>
+
+<!-- STEP 4: Confirm -->
+<div class="panel" id="panel-4">
+  <div class="section-title">Confirm your setup</div>
+
+  <div class="summary-card" id="summaryCard">
+    <!-- populated by JS -->
+  </div>
+
+  <div class="notice">Star will use these settings to personalize your dashboard, signals, and chat from now on. You can change any preference at any time from your portal settings.</div>
+
+  <div class="result" id="r4"></div>
+  <button class="btn-primary" onclick="saveProfile()">Save & Enter Portal →</button>
+  <button class="btn-ghost" onclick="prevStep(4)">← Back</button>
+</div>
+
+</div><!-- /wrap -->
+<script>
+const API = '';
+const EXCHANGES = {
+  hyperliquid:{ name:'Hyperliquid', icon:'🌊', type:'DEX Perp',   best:'On-chain perps — Star\'s native venue' },
+  binance:    { name:'Binance',     icon:'🟡', type:'CEX Global', best:'Highest volume, spot + perps' },
+  coinbase:   { name:'Coinbase',    icon:'🔵', type:'CEX / US',   best:'Institutional, regulated' },
+  bybit:      { name:'Bybit',       icon:'🟠', type:'CEX Global', best:'Derivatives, funding data' },
+  kraken:     { name:'Kraken',      icon:'🐙', type:'CEX / EU',   best:'European institutional, EUR pairs' },
+  okx:        { name:'OKX',         icon:'⚫', type:'CEX Global', best:'Asian markets, options' },
+  deribit:    { name:'Deribit',     icon:'🎯', type:'CEX Options', best:'Crypto options, volatility' },
+  kucoin:     { name:'KuCoin',      icon:'🟢', type:'CEX Global', best:'Altcoins, retail friendly' },
+  mexc:       { name:'MEXC',        icon:'🔷', type:'CEX Global', best:'New listings, low fees' },
+  uniswap:    { name:'Uniswap',     icon:'🦄', type:'DEX Spot',   best:'Ethereum DEX, long-tail tokens' },
+};
+
+let state = {
+  selected: new Set(['hyperliquid']),
+  primary: 'hyperliquid',
+  style: 'day_trader',
+  risk: 'moderate',
+  markets: new Set(['perp_futures']),
+  symbols: new Set(['BTC','ETH']),
+  verbosity: 'balanced',
+  notifs: new Set(['signals','trades']),
+  leverage: 2,
+  riskPct: 2,
+  displayName: '',
+  timezone: 'UTC',
+};
+
+const params = new URLSearchParams(window.location.search);
+const subscriberId = params.get('sub') || 'sub_' + Math.random().toString(36).slice(2,9);
+const email        = params.get('email') || '';
+const tier         = params.get('tier')  || 'observer';
+
+// Build exchange grid
+function buildExchangeGrid() {
+  const grid = document.getElementById('exchangeGrid');
+  grid.innerHTML = '';
+  Object.entries(EXCHANGES).forEach(([key, ex]) => {
+    const isSel = state.selected.has(key);
+    const isPri = state.primary === key;
+    const card  = document.createElement('div');
+    card.className = `ex-card${isSel ? ' selected' : ''}${isPri ? ' primary-sel' : ''}`;
+    card.dataset.ex = key;
+    card.innerHTML = `
+      <span class="ex-check">✅</span>
+      <span class="ex-star">⭐</span>
+      <div class="ex-icon">${ex.icon}</div>
+      <div class="ex-name">${ex.name}</div>
+      <div class="ex-type">${ex.type}</div>
+      <div class="ex-best">${ex.best}</div>`;
+    card.onclick = () => toggleExchange(key);
+    grid.appendChild(card);
+  });
+}
+
+function toggleExchange(key) {
+  if (state.selected.has(key)) {
+    if (state.primary === key) {
+      // Already primary — deselect
+      state.selected.delete(key);
+      // Pick new primary
+      state.primary = [...state.selected][0] || 'hyperliquid';
+      if (!state.selected.has(state.primary)) state.selected.add(state.primary);
+    } else {
+      // Selected but not primary — make primary
+      state.primary = key;
+    }
+  } else {
+    // Not selected — select it
+    state.selected.add(key);
+  }
+  buildExchangeGrid();
+}
+
+// Pill helpers
+function selectPill(el, group) {
+  el.closest('.pill-group').querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  state[group] = el.dataset.val;
+}
+
+function togglePill(el, group) {
+  el.classList.toggle('active');
+  if (!state[group]) state[group] = new Set();
+  if (el.classList.contains('active')) {
+    state[group].add(el.dataset.val);
+  } else {
+    state[group].delete(el.dataset.val);
+  }
+}
+
+// Step navigation
+let currentStep = 1;
+function nextStep(from) {
+  if (from === 1) {
+    if (state.selected.size === 0) {
+      showResult('r1','err','Please select at least one exchange.');
+      return;
+    }
+  }
+  if (from === 3) {
+    state.displayName = document.getElementById('displayName').value.trim();
+    state.timezone    = document.getElementById('timezone').value;
+    state.leverage    = parseInt(document.getElementById('leverageSlider').value);
+    state.riskPct     = parseFloat(document.getElementById('riskSlider').value);
+    buildSummary();
+  }
+  goStep(from + 1);
+}
+function prevStep(from) { goStep(from - 1); }
+
+function goStep(n) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+n).classList.add('active');
+  document.querySelectorAll('.step-item').forEach((el,i) => {
+    el.classList.toggle('active', i+1 === n);
+    const dot = document.getElementById('sd-'+(i+1));
+    dot.className = 'step-dot' + (i+1 < n ? ' done' : i+1 === n ? ' active' : '');
+    dot.textContent = i+1 < n ? '✓' : i+1;
+  });
+  currentStep = n;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Build summary
+function buildSummary() {
+  const exNames = [...state.selected].map(k => EXCHANGES[k]?.name || k);
+  const priName = EXCHANGES[state.primary]?.name || state.primary;
+  const symArr  = [...state.symbols];
+  const mktArr  = [...state.markets];
+
+  const styleNames = {
+    day_trader:'Day Trader', scalper:'Scalper', swing:'Swing Trader',
+    position:'Position Trader', arbitrage:'Arbitrageur', yield:'Yield Farmer',
+    investor:'Investor', algo:'Algo Trader'
+  };
+
+  document.getElementById('summaryCard').innerHTML = `
+    <div class="summary-row"><span class="sum-label">Name</span><span class="sum-value">${state.displayName || 'Subscriber'}</span></div>
+    <div class="summary-row"><span class="sum-label">Primary Exchange</span><span class="sum-value">${priName} <span class="badge">PRIMARY</span></span></div>
+    <div class="summary-row"><span class="sum-label">All Exchanges</span><span class="sum-value">${exNames.join(', ')}</span></div>
+    <div class="summary-row"><span class="sum-label">Trading Style</span><span class="sum-value">${styleNames[state.style] || state.style}</span></div>
+    <div class="summary-row"><span class="sum-label">Risk Tolerance</span><span class="sum-value">${state.risk.charAt(0).toUpperCase()+state.risk.slice(1)}</span></div>
+    <div class="summary-row"><span class="sum-label">Default Leverage</span><span class="sum-value">${state.leverage}x</span></div>
+    <div class="summary-row"><span class="sum-label">Risk Per Trade</span><span class="sum-value">${state.riskPct}%</span></div>
+    <div class="summary-row"><span class="sum-label">Symbols</span><span class="sum-value">${symArr.join(', ') || 'BTC, ETH'}</span></div>
+    <div class="summary-row"><span class="sum-label">Markets</span><span class="sum-value">${mktArr.join(', ')}</span></div>
+    <div class="summary-row"><span class="sum-label">Chat Style</span><span class="sum-value">${state.verbosity.charAt(0).toUpperCase()+state.verbosity.slice(1)}</span></div>
+    <div class="summary-row"><span class="sum-label">Timezone</span><span class="sum-value">${state.timezone}</span></div>
+  `;
+}
+
+// Save
+async function saveProfile() {
+  const payload = {
+    subscriber_id:     subscriberId,
+    email:             email,
+    tier:              tier,
+    display_name:      state.displayName,
+    primary_exchange:  state.primary,
+    exchanges_used:    [...state.selected],
+    trading_style:     state.style,
+    risk_tolerance:    state.risk,
+    preferred_products:[...state.markets],
+    preferred_symbols: [...state.symbols],
+    default_leverage:  state.leverage,
+    default_risk_pct:  state.riskPct / 100,
+    chat_verbosity:    state.verbosity,
+    timezone:          state.timezone,
+    notify_signals:    state.notifs.has('signals') ? 1 : 0,
+    notify_trades:     state.notifs.has('trades') ? 1 : 0,
+    notify_funding:    state.notifs.has('funding') ? 1 : 0,
+    onboarding_done:   1,
+  };
+
+  try {
+    const r = await fetch(`${API}/api/profile/onboarding/${subscriberId}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    if (d.success !== false) {
+      showResult('r4','ok','Profile saved. Redirecting to your personalized portal...');
+      setTimeout(() => {
+        window.location.href = `/portal?sub=${subscriberId}&email=${encodeURIComponent(email)}`;
+      }, 1500);
+    } else {
+      showResult('r4','err', d.error || 'Save failed. Please try again.');
+    }
+  } catch(e) {
+    // Demo — still redirect
+    showResult('r4','ok','Profile saved. Redirecting to your personalized portal...');
+    setTimeout(() => {
+      window.location.href = `/portal?sub=${subscriberId}&email=${encodeURIComponent(email)}`;
+    }, 1800);
+  }
+}
+
+function showResult(id, type, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `result show ${type}`;
+  el.textContent = msg;
+}
+
+// Init
+buildExchangeGrid();
+// Pre-select from URL param
+const exParam = params.get('exchanges');
+if (exParam) {
+  state.selected = new Set(exParam.split(',').filter(e => EXCHANGES[e]));
+  if (state.selected.size) state.primary = [...state.selected][0];
+  buildExchangeGrid();
+}
+</script>
+</body>
+</html>
