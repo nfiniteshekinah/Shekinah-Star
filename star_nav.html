@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Star Navigation — Component</title>
+<!--
+  star_nav.html
+  Universal Navigation Component for ShekinahStar.io
+  Include in every page via JS injection or Flask template.
+  
+  USAGE — add to any page's <head>:
+    <script src="/static/star_nav.js"></script>
+  
+  OR include the CSS+JS inline and call:
+    StarNav.init({ tier: 'sovereign', name: 'Sarah', email: 'sarah@...' })
+  
+  The nav auto-detects tier from localStorage and shows/hides
+  tier-appropriate menu items.
+-->
+<style>
+/* ══ STAR UNIVERSAL NAV ══════════════════════════════════════════ */
+:root {
+  --sn-void:   #07050f;
+  --sn-deep:   #0c0919;
+  --sn-gold:   #c9aa6b;
+  --sn-glo:    #7a6340;
+  --sn-ghi:    #e8cc88;
+  --sn-text:   #c8baa8;
+  --sn-dim:    #5a5040;
+  --sn-rule:   rgba(201,170,107,0.14);
+  --sn-ff-d:   'Cinzel', serif;
+  --sn-ff-m:   'JetBrains Mono', monospace;
+}
+
+/* ── Top bar ── */
+#star-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 9999;
+  height: 52px;
+  background: rgba(7,5,15,.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--sn-rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.8rem;
+  font-family: var(--sn-ff-m);
+}
+
+#star-nav .sn-logo {
+  font-family: var(--sn-ff-d);
+  font-size: .7rem;
+  letter-spacing: .3em;
+  color: var(--sn-gold);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+#star-nav .sn-logo span { color: var(--sn-glo); font-size: .5rem; }
+
+/* ── Main links ── */
+#star-nav .sn-links {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  list-style: none;
+}
+#star-nav .sn-links li { position: relative; }
+#star-nav .sn-links a,
+#star-nav .sn-links button {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .4rem .9rem;
+  font-family: var(--sn-ff-m);
+  font-size: .54rem;
+  letter-spacing: .15em;
+  color: var(--sn-dim);
+  text-decoration: none;
+  text-transform: uppercase;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color .2s;
+  white-space: nowrap;
+}
+#star-nav .sn-links a:hover,
+#star-nav .sn-links button:hover { color: var(--sn-gold); }
+#star-nav .sn-links a.active { color: var(--sn-gold); }
+
+/* ── Dropdown ── */
+#star-nav .sn-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  background: rgba(10,7,20,.97);
+  border: 1px solid var(--sn-rule);
+  border-top: none;
+  padding: .5rem 0;
+  display: none;
+  z-index: 10000;
+}
+#star-nav .sn-links li:hover .sn-dropdown { display: block; }
+#star-nav .sn-dropdown a {
+  display: block;
+  padding: .5rem 1.2rem;
+  font-size: .52rem;
+  letter-spacing: .12em;
+  color: var(--sn-dim);
+}
+#star-nav .sn-dropdown a:hover { color: var(--sn-gold); background: rgba(201,170,107,.04); }
+#star-nav .sn-dropdown .sn-divider {
+  height: 1px;
+  background: var(--sn-rule);
+  margin: .4rem 0;
+}
+
+/* ── Right side ── */
+#star-nav .sn-right {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+/* Tier badge */
+#star-nav .sn-tier {
+  font-family: var(--sn-ff-m);
+  font-size: .5rem;
+  letter-spacing: .15em;
+  padding: .2rem .6rem;
+  border-radius: 2px;
+  text-transform: uppercase;
+  border: 1px solid var(--sn-rule);
+  color: var(--sn-glo);
+  background: rgba(201,170,107,.06);
+}
+#star-nav .sn-tier.t-arcanum { color: var(--sn-ghi); border-color: var(--sn-gold); }
+#star-nav .sn-tier.t-aegis    { color: #4db8e8; border-color: rgba(77,184,232,.4); }
+#star-nav .sn-tier.t-enterprise { color: #c084fc; border-color: rgba(192,132,252,.3); }
+#star-nav .sn-tier.t-pioneer  { color: #f59e0b; border-color: rgba(245,158,11,.3); }
+#star-nav .sn-tier.t-sovereign { color: #34d399; border-color: rgba(52,211,153,.3); }
+
+/* Subscribe button */
+#star-nav .sn-subscribe {
+  padding: .35rem 1rem;
+  background: linear-gradient(135deg, var(--sn-glo), var(--sn-gold));
+  color: var(--sn-void);
+  font-family: var(--sn-ff-d);
+  font-size: .55rem;
+  letter-spacing: .2em;
+  text-decoration: none;
+  border-radius: 2px;
+  text-transform: uppercase;
+  transition: filter .2s;
+  white-space: nowrap;
+}
+#star-nav .sn-subscribe:hover { filter: brightness(1.1); }
+
+/* User avatar */
+#star-nav .sn-user {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--sn-rule);
+  background: rgba(201,170,107,.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .65rem;
+  cursor: pointer;
+  color: var(--sn-gold);
+  position: relative;
+}
+
+/* Mobile hamburger */
+#star-nav .sn-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  padding: .4rem;
+}
+#star-nav .sn-hamburger span {
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--sn-dim);
+}
+
+/* ── Status bar (below nav, hidden by default) ── */
+#star-status-bar {
+  position: fixed;
+  top: 52px; left: 0; right: 0;
+  z-index: 9998;
+  height: 28px;
+  background: rgba(12,9,25,.9);
+  border-bottom: 1px solid var(--sn-rule);
+  display: none;
+  align-items: center;
+  padding: 0 1.8rem;
+  gap: 2rem;
+  overflow: hidden;
+}
+#star-status-bar .sb-item {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-family: var(--sn-ff-m);
+  font-size: .5rem;
+  letter-spacing: .1em;
+  color: var(--sn-dim);
+  white-space: nowrap;
+}
+#star-status-bar .sb-item .sb-val { color: var(--sn-text); }
+#star-status-bar .sb-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--sn-glo); }
+#star-status-bar .sb-dot.live { background: #34d399; animation: sbPulse 2s ease-in-out infinite; }
+@keyframes sbPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+/* ── Breadcrumb ── */
+#star-breadcrumb {
+  position: fixed;
+  top: 52px; left: 0; right: 0;
+  z-index: 9997;
+  height: 32px;
+  background: rgba(7,5,15,.85);
+  border-bottom: 1px solid rgba(201,170,107,.08);
+  display: flex;
+  align-items: center;
+  padding: 0 1.8rem;
+  gap: .6rem;
+  font-family: var(--sn-ff-m);
+  font-size: .5rem;
+  letter-spacing: .1em;
+  color: var(--sn-dim);
+}
+#star-breadcrumb a { color: var(--sn-dim); text-decoration: none; }
+#star-breadcrumb a:hover { color: var(--sn-glo); }
+#star-breadcrumb .bc-sep { color: rgba(201,170,107,.3); }
+#star-breadcrumb .bc-current { color: var(--sn-glo); }
+
+/* ── Page offset ── (add to body) ── */
+.sn-offset { padding-top: 52px; }
+.sn-offset-status { padding-top: 80px; }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  #star-nav .sn-links { display: none; }
+  #star-nav .sn-hamburger { display: flex; }
+  #star-nav .sn-links.open {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 52px; left: 0; right: 0;
+    background: rgba(7,5,15,.98);
+    border-bottom: 1px solid var(--sn-rule);
+    padding: 1rem 0 1.5rem;
+    gap: 0;
+  }
+  #star-nav .sn-links.open a { padding: .7rem 1.8rem; font-size: .6rem; }
+  #star-nav .sn-links.open .sn-dropdown { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ DEMO of the nav component ══════════════════════════════════ -->
+<div id="star-nav">
+  <a class="sn-logo" href="/">⭐ <span>SHEKINAH</span> STAR</a>
+
+  <ul class="sn-links" id="snLinks">
+
+    <!-- Intelligence -->
+    <li>
+      <a href="/">Chat</a>
+    </li>
+
+    <!-- Markets dropdown -->
+    <li>
+      <button>Markets ▾</button>
+      <div class="sn-dropdown">
+        <a href="/app">Dashboard</a>
+        <a href="/signals">Signals</a>
+        <a href="/report">Intelligence Report</a>
+        <div class="sn-divider"></div>
+        <a href="/api/exchanges/status" target="_blank">Exchange Status</a>
+      </div>
+    </li>
+
+    <!-- Account dropdown -->
+    <li>
+      <button>Account ▾</button>
+      <div class="sn-dropdown">
+        <a href="/portal">Portal</a>
+        <a href="/setup">Exchange Setup</a>
+        <a href="/kyc">Verification (KYC)</a>
+        <a href="/connect-wallet">Connect Wallet</a>
+        <div class="sn-divider"></div>
+        <a href="/pricing">Upgrade Tier</a>
+      </div>
+    </li>
+
+    <!-- About dropdown -->
+    <li>
+      <button>About ▾</button>
+      <div class="sn-dropdown">
+        <a href="/star">Shekinah Star</a>
+        <a href="/sarah">Sarah DeFer</a>
+        <a href="/pricing">Tiers & Pricing</a>
+        <div class="sn-divider"></div>
+        <a href="/legal">Terms & Privacy</a>
+        <a href="/api/docs/compliance" target="_blank">Compliance</a>
+      </div>
+    </li>
+
+  </ul>
+
+  <div class="sn-right">
+    <span class="sn-tier t-sovereign" id="snTier">Observer</span>
+    <a class="sn-subscribe" href="/pricing" id="snSubBtn">Subscribe →</a>
+    <div class="sn-user" id="snUser" title="Account">⭐</div>
+    <div class="sn-hamburger" onclick="document.getElementById('snLinks').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</div>
+
+<!-- Status bar (shown for logged-in subscribers) -->
+<div id="star-status-bar">
+  <div class="sb-item"><div class="sb-dot live"></div><span>STAR</span><span class="sb-val">Live</span></div>
+  <div class="sb-item"><span>BTC</span><span class="sb-val" id="sbBtc">—</span></div>
+  <div class="sb-item"><span>ETH</span><span class="sb-val" id="sbEth">—</span></div>
+  <div class="sb-item"><span>SOL</span><span class="sb-val" id="sbSol">—</span></div>
+  <div class="sb-item" id="sbTier" style="margin-left:auto"></div>
+</div>
+
+<!-- Demo content -->
+<div style="padding:100px 2rem 3rem;max-width:700px;margin:0 auto;font-family:'Cormorant Garamond',serif;color:#b0a080">
+  <h2 style="font-family:'Cinzel',serif;color:#c9aa6b;margin-bottom:1rem">Star Navigation Component</h2>
+  <p>This is the universal navigation bar. It appears on every page of ShekinahStar.io and adapts based on the subscriber's tier and login state.</p>
+  <br>
+  <p><strong style="color:#ddd0bb">Tier-aware:</strong> The tier badge changes color and label based on the logged-in subscriber's tier. Observer tiers see a Subscribe button. Sovereign+ see their tier displayed.</p>
+  <br>
+  <p><strong style="color:#ddd0bb">Status bar:</strong> Logged-in subscribers see a live price ticker below the nav showing BTC, ETH, SOL prices pulled from the Star API.</p>
+  <br>
+  <p><strong style="color:#ddd0bb">Dropdowns:</strong> Markets, Account, and About categories organize all pages without overwhelming the nav bar.</p>
+  <br>
+  <p><strong style="color:#ddd0bb">To integrate:</strong> Add the CSS and HTML from this component to the <code>&lt;head&gt;</code> and <code>&lt;body&gt;</code> of every Star page. Or use Flask's Jinja templating to include it via <code>{% include 'star_nav.html' %}</code>.</p>
+</div>
+
+<script>
+// ── Nav initialization ──────────────────────────────────────────
+const StarNav = {
+  init(opts = {}) {
+    const tier  = opts.tier  || localStorage.getItem('star_tier')  || '';
+    const name  = opts.name  || localStorage.getItem('star_name')  || '';
+    const email = opts.email || localStorage.getItem('star_email') || '';
+    const loggedIn = tier && email;
+
+    // Update tier badge
+    const badge = document.getElementById('snTier');
+    const subBtn = document.getElementById('snSubBtn');
+    const userEl = document.getElementById('snUser');
+
+    if (loggedIn) {
+      badge.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+      badge.className = `sn-tier t-${tier}`;
+      subBtn.style.display = tier === 'observer' || tier === 'navigator' ? '' : 'none';
+      if (name) userEl.title = name;
+
+      // Show status bar for Sovereign+
+      if (['sovereign','pioneer','enterprise','arcanum','aegis'].includes(tier)) {
+        document.getElementById('star-status-bar').style.display = 'flex';
+        document.getElementById('sbTier').innerHTML =
+          `<span style="font-family:var(--sn-ff-d);color:var(--sn-glo)">${name || email}</span>`;
+        StarNav.loadPrices();
+      }
+    } else {
+      badge.style.display = 'none';
+    }
+
+    // Mark active page
+    const path = window.location.pathname;
+    document.querySelectorAll('#star-nav .sn-links a').forEach(a => {
+      if (a.getAttribute('href') === path) a.classList.add('active');
+    });
+  },
+
+  async loadPrices() {
+    try {
+      const r = await fetch('/api/hl/prices');
+      const d = await r.json();
+      const p = d.prices || {};
+      if (p.BTC) document.getElementById('sbBtc').textContent = '$' + p.BTC.toLocaleString();
+      if (p.ETH) document.getElementById('sbEth').textContent = '$' + p.ETH.toLocaleString();
+      if (p.SOL) document.getElementById('sbSol').textContent = '$' + p.SOL.toFixed(2);
+    } catch(e) {}
+  }
+};
+
+// Auto-init
+StarNav.init();
+
+// Refresh prices every 30 seconds for live subscribers
+setInterval(() => StarNav.loadPrices(), 30000);
+</script>
+</body>
+</html>
