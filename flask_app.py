@@ -33,6 +33,90 @@ WALLET            = '0x11E8B5C950B2C187D57DB370a9bfdc83412B3f4D'
 HL_INFO           = 'https://api.hyperliquid.xyz/info'
 WATCHLIST         = ['BTC','ETH','SOL','AVAX','DOGE','ARB','LINK','MATIC']
 
+# ══ STAR STARTUP HEALTH CHECK ════════════════════════════════════
+# Single point of truth for what's loaded and what isn't.
+# Runs before everything — prints clear status to error log.
+# Check /api/health anytime to see Star's current status.
+try:
+    from star_health import run_health_check, register_health_route
+    _startup_health = run_health_check(verbose=True)
+    register_health_route(app)
+except ImportError:
+    print('⚠️ star_health.py not found — upload it for startup diagnostics')
+    _startup_health = {}
+# ════════════════════════════════════════════════════════════════
+
+# ══ STAR SECURITY LAYER 🔒 — MUST BE FIRST ══════════════════════
+try:
+    from star_security import (
+        init_security, register_security_routes,
+        rate_limit, require_clean_input, require_owner,
+        log_security_event, verify_owner_token_secure
+    )
+    init_security(app)
+    register_security_routes(app)
+except ImportError as e:
+    print(f'⚠️ star_security.py not found — upload to activate: {e}')
+except Exception as e:
+    print(f'⚠️ Security layer error (non-fatal): {e}')
+
+# ══ STAR INTELLIGENCE ENGINE ⭐ ══════════════════════════════════
+# Born: March 12, 2026 — Designed & Built by Sarah DeFer
+try:
+    from star_intelligence import intel_bp, init_db, seed_knowledge_base
+    app.register_blueprint(intel_bp)
+    with app.app_context():
+        init_db()
+        seed_knowledge_base()
+except ImportError as e:
+    print(f'⚠️ star_intelligence.py not found: {e}')
+except Exception as e:
+    print(f'⚠️ Intelligence engine error (non-fatal): {e}')
+
+# ══ STAR TREND RADAR 📡 ════════════════════════════════════════
+try:
+    from star_trend_radar import radar_bp, init_radar_db
+    app.register_blueprint(radar_bp)
+    with app.app_context():
+        init_radar_db()
+except ImportError as e:
+    print(f'⚠️ star_trend_radar.py not found: {e}')
+except Exception as e:
+    print(f'⚠️ Trend radar error (non-fatal): {e}')
+
+# ══ STAR ETHICS ENGINE ⚖️ ════════════════════════════════════════
+try:
+    from star_ethics import ethics_bp, init_ethics_db
+    app.register_blueprint(ethics_bp)
+    with app.app_context():
+        init_ethics_db()
+except ImportError as e:
+    print(f'⚠️ star_ethics.py not found: {e}')
+except Exception as e:
+    print(f'⚠️ Ethics engine error (non-fatal): {e}')
+
+# ══ STAR ARCANUM & AEGIS 🔑 ════════════════════════════════════
+try:
+    from star_arcanum import arcanum_bp, init_arcanum_db
+    app.register_blueprint(arcanum_bp)
+    with app.app_context():
+        init_arcanum_db()
+except ImportError as e:
+    print(f'⚠️ star_arcanum.py not found: {e}')
+except Exception as e:
+    print(f'⚠️ Arcanum error (non-fatal): {e}')
+# ══ STAR AML & COMPLIANCE ENGINE ════════════════════════════════
+try:
+    from star_aml import aml_bp, init_aml_db
+    app.register_blueprint(aml_bp)
+    with app.app_context():
+        init_aml_db()
+except ImportError as e:
+    print(f'⚠️ star_aml.py not found: {e}')
+except Exception as e:
+    print(f'⚠️ AML engine error (non-fatal): {e}')
+# ══════════════════════════════════════════════════════════════
+
 
 # ══ READ TRADER STATE FROM FILE ═══════════════════════════════════
 def get_trader_state():
@@ -1519,49 +1603,33 @@ def superfluid_webhook():
         with open(log_file, 'w') as f:
             json.dump(logs[:100], f, indent=2)
 
-        # Extract subscriber info from webhook payload
-        # Superfluid sends different formats — handle both
         event_type = data.get('type', data.get('event', ''))
-        
-        # Get sender address (subscriber wallet)
         sender = (data.get('sender') or 
                  data.get('from') or 
                  data.get('data', {}).get('sender') or
                  data.get('data', {}).get('from', ''))
 
-        # Get flow rate to determine tier
         flow_rate = float(data.get('flowRate') or 
                          data.get('data', {}).get('flowRate') or 0)
-        
-        # Convert from wei per second to per month
-        # 1 USDC = 1e6 units, 1 month = 2592000 seconds
         monthly_amount = round(flow_rate * 2592000 / 1e18, 0) if flow_rate > 0 else 0
 
-        # Get checkout ID if available
         checkout_id = (data.get('checkoutId') or 
                       data.get('productId') or
                       data.get('data', {}).get('checkoutId', ''))
 
-        # Determine tier
         tier = CHECKOUT_TIER_MAP.get(checkout_id, '')
         if not tier:
             tier = FLOW_RATE_TIER_MAP.get(int(monthly_amount), 'observer')
 
-        # Get receiver to confirm it's our wallet
         receiver = (data.get('receiver') or 
                    data.get('to') or
                    data.get('data', {}).get('receiver', ''))
 
-        # Only process if payment is to our wallet
         if receiver and receiver.lower() != '0x91C227029ff42e4af0e1643673b04B3eC7A2d6fb'.lower():
             return jsonify({'status': 'ignored', 'reason': 'wrong receiver'}), 200
 
-        # Register subscriber if we have a sender address
         if sender and event_type in ['FlowCreated', 'flow_created', 'FLOW_CREATED', 'created', '']:
-            # Use wallet address as identifier since we don't have email yet
-            # Send notification to Sarah with wallet address
             from shekinah_star_email import send_email, email_wrapper
-            
             notify_content = f"""
 <h2>⭐ New Superfluid Subscriber!</h2>
 <div style="background:#2a1050;border:1px solid #4a2a7a;padding:16px 20px;margin:16px 0;">
@@ -1588,12 +1656,10 @@ def superfluid_webhook():
 
 @app.route('/api/webhook/superfluid/test', methods=['GET'])
 def test_webhook():
-    """Test endpoint to verify webhook is reachable"""
     return jsonify({'status': 'webhook endpoint active', 'url': '/api/webhook/superfluid'}), 200
 
 @app.route('/api/webhook/log')
 def webhook_log():
-    """View recent webhook calls - Sarah only"""
     try:
         log_file = '/home/ShekinahD/star_webhook_log.json'
         logs = json.load(open(log_file)) if os.path.exists(log_file) else []
@@ -1667,13 +1733,23 @@ def gematria():
 def sarah_bio():
     return send_from_directory(BASE, 'star_sarah.html')
 
-@app.route('/terms')
-def terms():
-    return send_from_directory(BASE, 'star_terms.html')
+@app.route('/favicon.ico')
+def favicon():
+    """Serve Star's favicon — fixes 404 console error."""
+    svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+      <rect width="32" height="32" fill="#03020a"/>
+      <polygon points="16,2 19.5,12 30,12 21.5,18.5 24.5,29 16,23 7.5,29 10.5,18.5 2,12 12.5,12"
+        fill="none" stroke="#c9aa6b" stroke-width="1.2"/>
+      <circle cx="16" cy="16" r="2.5" fill="#c9aa6b"/>
+    </svg>'''
+    from flask import Response
+    return Response(svg, mimetype='image/svg+xml')
 
-@app.route('/privacy')
-def privacy():
-    return send_from_directory(BASE, 'star_privacy.html')
+@app.route('/star_icon_192.png')
+@app.route('/star_icon_512.png')
+def star_icon():
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192"><rect width="192" height="192" fill="#03020a"/><text x="96" y="130" font-size="120" text-anchor="middle">⭐</text></svg>'
+    return svg, 200, {'Content-Type': 'image/svg+xml'}
 
 @app.route('/admin')
 def admin():
@@ -1684,7 +1760,6 @@ def admin():
 @app.route('/avatar')
 def avatar_page():
     return send_from_directory(BASE, 'shekinah_star_avatar.html')
-
 
 @app.route('/<path:filename>')
 def serve(filename):
