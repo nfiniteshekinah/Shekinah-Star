@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Star Portal — My Exchanges</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void:      #03020a;
+  --deep:      #06040f;
+  --card:      #0a0716;
+  --card2:     #0d0920;
+  --border:    rgba(180,150,80,0.12);
+  --border-hi: rgba(180,150,80,0.3);
+  --gold:      #c9aa6b;
+  --gold-dim:  #8a7145;
+  --gold-hi:   #e8cc88;
+  --ice:       #4db8e8;
+  --green:     #34d399;
+  --amber:     #f59e0b;
+  --red:       #ef4444;
+  --purple:    #a78bfa;
+  --text:      #e2d9c8;
+  --text-dim:  #6b6050;
+  --text-body: #b8a890;
+  --ff-d:      'Cinzel', serif;
+  --ff-b:      'Cormorant Garamond', serif;
+  --ff-m:      'JetBrains Mono', monospace;
+}
+
+/* Exchange brand colors */
+.ex-binance    { --ex-color: #f3ba2f; }
+.ex-coinbase   { --ex-color: #0052ff; }
+.ex-bybit      { --ex-color: #f7a600; }
+.ex-kraken     { --ex-color: #5741d9; }
+.ex-hyperliquid{ --ex-color: #c9aa6b; }
+.ex-okx        { --ex-color: #333; }
+.ex-kucoin     { --ex-color: #23af91; }
+.ex-dydx       { --ex-color: #6966ff; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--ff-b);
+  font-size: 16px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRID LAYOUT ── */
+.portal-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  grid-column: 1 / -1;
+  background: var(--deep);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.topbar-brand {
+  font-family: var(--ff-d);
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.topbar-sep { flex: 1; }
+.topbar-user {
+  font-family: var(--ff-m);
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.user-tier {
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+  font-size: 0.5rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.tier-observer   { background: rgba(107,96,80,0.2);  color: var(--text-dim); border: 1px solid rgba(107,96,80,0.3); }
+.tier-navigator  { background: rgba(77,184,232,0.15); color: var(--ice);      border: 1px solid rgba(77,184,232,0.3); }
+.tier-sovereign  { background: rgba(201,170,107,0.15);color: var(--gold);     border: 1px solid rgba(201,170,107,0.3); }
+.tier-pioneer    { background: rgba(167,139,250,0.15);color: var(--purple);   border: 1px solid rgba(167,139,250,0.3); }
+.tier-enterprise { background: rgba(52,211,153,0.15); color: var(--green);    border: 1px solid rgba(52,211,153,0.3); }
+.tier-arcanum    { background: rgba(245,158,11,0.15); color: var(--amber);    border: 1px solid rgba(245,158,11,0.3); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--deep);
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 0;
+  overflow-y: auto;
+}
+.sidebar-section {
+  padding: 0 1rem;
+  margin-bottom: 1.5rem;
+}
+.sidebar-label {
+  font-family: var(--ff-m);
+  font-size: 0.5rem;
+  letter-spacing: 0.25em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+  padding: 0 0.3rem;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--ff-m);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  border: 1px solid transparent;
+}
+.sidebar-item:hover { background: rgba(201,170,107,0.05); color: var(--text-body); }
+.sidebar-item.active { background: rgba(201,170,107,0.08); color: var(--gold); border-color: var(--border); }
+.sidebar-icon { width: 16px; text-align: center; font-size: 0.85rem; }
+
+/* My exchanges in sidebar */
+.exchange-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  margin-bottom: 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.exchange-chip:hover { border-color: var(--border-hi); }
+.exchange-chip.primary { border-color: rgba(201,170,107,0.3); background: rgba(201,170,107,0.05); }
+.chip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ex-color, var(--text-dim)); }
+.chip-name { font-family: var(--ff-m); font-size: 0.58rem; letter-spacing: 0.05em; color: var(--text-body); flex: 1; }
+.chip-primary { font-family: var(--ff-m); font-size: 0.45rem; letter-spacing: 0.15em; color: var(--gold-dim); }
+
+/* ── MAIN CONTENT ── */
+.main {
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: var(--void);
+}
+
+/* ── SECTION HEADER ── */
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.section-title {
+  font-family: var(--ff-d);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--gold-hi);
+  text-transform: uppercase;
+}
+.section-sub {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-style: italic;
+  flex: 1;
+}
+.section-line { flex: 1; height: 1px; background: var(--border); }
+
+/* ── GRID CARDS ── */
+.cards-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 1.5rem; }
+.cards-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 1.5rem; }
+.cards-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 1.5rem; }
+
+/* ── STAT CARD ── */
+.stat-card {
+  background: var(--card);
+  padding: 1.2rem 1.4rem;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--ex-color, var(--gold-dim)), transparent);
+  opacity: 0.4;
+}
+.stat-label {
+  font-family: var(--ff-m);
+  font-size: 0.52rem;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.stat-ex-badge {
+  padding: 0.05rem 0.35rem;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.05);
+  font-size: 0.45rem;
+  letter-spacing: 0.1em;
+}
+.stat-value {
+  font-family: var(--ff-m);
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.15rem;
+}
+.stat-change {
+  font-family: var(--ff-m);
+  font-size: 0.58rem;
+  letter-spacing: 0.05em;
+}
+.stat-change.up   { color: var(--green); }
+.stat-change.down { color: var(--red); }
+.stat-change.flat { color: var(--text-dim); }
+
+/* ── CROSS EXCHANGE TABLE ── */
+.cross-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-family: var(--ff-m);
+  font-size: 0.62rem;
+}
+.cross-table th {
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 400;
+  background: var(--card2);
+}
+.cross-table td {
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid rgba(180,150,80,0.05);
+  color: var(--text-body);
+}
+.cross-table tr:hover td { background: rgba(201,170,107,0.03); }
+.cross-table .symbol-cell {
+  font-family: var(--ff-d);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+}
+.cross-table .price-cell { color: var(--text); }
+.cross-table .primary-cell { color: var(--gold-hi); }
+.cross-table .spread-cell { }
+.spread-badge {
+  padding: 0.1rem 0.35rem;
+  border-radius: 2px;
+  font-size: 0.52rem;
+}
+.spread-low  { background: rgba(52,211,153,0.1);  color: var(--green); }
+.spread-med  { background: rgba(245,158,11,0.1);  color: var(--amber); }
+.spread-high { background: rgba(239,68,68,0.1);   color: var(--red); }
+.best-venue { background: rgba(201,170,107,0.1); color: var(--gold); border-radius: 2px; padding: 0.1rem 0.3rem; }
+
+/* ── SIGNAL CARD ── */
+.signal-list { margin-bottom: 1.5rem; }
+.signal-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.signal-dir {
+  font-family: var(--ff-m);
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 2px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+.dir-bull { background: rgba(52,211,153,0.15);  color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
+.dir-bear { background: rgba(239,68,68,0.15);   color: var(--red);   border: 1px solid rgba(239,68,68,0.25); }
+.dir-neut { background: rgba(107,96,80,0.15);   color: var(--text-dim); border: 1px solid rgba(107,96,80,0.25); }
+.signal-body { flex: 1; }
+.signal-title { font-size: 0.9rem; color: var(--text); margin-bottom: 0.2rem; }
+.signal-detail { font-size: 0.8rem; color: var(--text-dim); font-style: italic; }
+.signal-meta { font-family: var(--ff-m); font-size: 0.5rem; letter-spacing: 0.1em; color: var(--text-dim); margin-top: 0.3rem; }
+.strength-bar { height: 2px; background: var(--border); border-radius: 1px; margin-top: 0.5rem; overflow: hidden; }
+.strength-fill { height: 100%; border-radius: 1px; transition: width 0.8s ease; }
+
+/* ── EXCHANGE SETUP PANEL ── */
+.setup-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+.setup-head {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.setup-title {
+  font-family: var(--ff-d);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  text-transform: uppercase;
+  flex: 1;
+}
+.setup-body { padding: 1.2rem; }
+
+.exchange-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+.exchange-tile {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  position: relative;
+}
+.exchange-tile:hover { border-color: var(--border-hi); background: rgba(201,170,107,0.03); }
+.exchange-tile.selected { border-color: rgba(201,170,107,0.4); background: rgba(201,170,107,0.07); }
+.exchange-tile.primary-selected { border-color: var(--gold); background: rgba(201,170,107,0.1); }
+.tile-icon { font-size: 1.4rem; margin-bottom: 0.4rem; }
+.tile-name { font-family: var(--ff-d); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-body); text-transform: uppercase; margin-bottom: 0.2rem; }
+.tile-type { font-family: var(--ff-m); font-size: 0.48rem; letter-spacing: 0.1em; color: var(--text-dim); }
+.tile-check {
+  position: absolute;
+  top: 0.4rem; right: 0.4rem;
+  font-size: 0.75rem;
+  display: none;
+}
+.exchange-tile.selected .tile-check { display: block; color: var(--gold); }
+.primary-star {
+  position: absolute;
+  top: 0.4rem; left: 0.4rem;
+  font-size: 0.6rem;
+  display: none;
+}
+.exchange-tile.primary-selected .primary-star { display: block; }
+
+/* Form elements */
+.form-row { margin-bottom: 1rem; }
+.form-row label { display: block; font-family: var(--ff-m); font-size: 0.55rem; letter-spacing: 0.2em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 0.35rem; }
+.form-row input, .form-row select {
+  width: 100%;
+  background: rgba(3,2,10,0.8);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.6rem 0.8rem;
+  font-family: var(--ff-m);
+  font-size: 0.62rem;
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-row input:focus, .form-row select:focus { border-color: var(--gold-dim); }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+
+.btn-primary {
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+  border: none;
+  color: var(--void);
+  font-family: var(--ff-d);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-ghost {
+  padding: 0.65rem 1.2rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--ff-m);
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  margin-left: 0.5rem;
+}
+.btn-ghost:hover { border-color: var(--gold-dim); color: var(--gold-dim); }
+
+/* ── TABS ── */
+.tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; gap: 0; }
+.tab-btn {
+  padding: 0.7rem 1.2rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  font-family: var(--ff-m);
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--text-body); }
+.tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── LOADING ── */
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2rem;
+  color: var(--text-dim);
+  font-family: var(--ff-m);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+}
+.spinner {
+  width: 14px; height: 14px;
+  border: 1px solid var(--border);
+  border-top-color: var(--gold-dim);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}
+.empty-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+.empty-title { font-family: var(--ff-d); font-size: 0.8rem; letter-spacing: 0.1em; color: var(--gold-dim); margin-bottom: 0.5rem; }
+.empty-text { font-size: 0.85rem; color: var(--text-dim); font-style: italic; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .portal-grid { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .cards-3 { grid-template-columns: 1fr; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="portal-grid">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <span class="topbar-brand">⭐ Shekinah Star</span>
+    <div style="width:1px;height:20px;background:var(--border)"></div>
+    <span style="font-family:var(--ff-m);font-size:0.58rem;color:var(--text-dim);letter-spacing:0.1em" id="pageTitle">My Exchange Dashboard</span>
+    <span class="topbar-sep"></span>
+    <div class="topbar-user">
+      <span id="userEmail">Loading...</span>
+      <span class="user-tier tier-sovereign" id="userTier">SOVEREIGN</span>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <div class="sidebar-item active" onclick="showTab('dashboard')">
+        <span class="sidebar-icon">📊</span> Dashboard
+      </div>
+      <div class="sidebar-item" onclick="showTab('signals')">
+        <span class="sidebar-icon">📡</span> My Signals
+      </div>
+      <div class="sidebar-item" onclick="showTab('setup')">
+        <span class="sidebar-icon">⚙️</span> Exchange Setup
+      </div>
+      <div class="sidebar-item" onclick="showTab('watchlist')">
+        <span class="sidebar-icon">👁</span> Watchlist
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">My Exchanges</div>
+      <div id="sidebarExchanges">
+        <div style="font-family:var(--ff-m);font-size:0.55rem;color:var(--text-dim);padding:0.4rem;font-style:italic">
+          No exchanges configured
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Quick Links</div>
+      <div class="sidebar-item" onclick="window.location='/kyc'">
+        <span class="sidebar-icon">🔐</span> KYC Verification
+      </div>
+      <div class="sidebar-item" onclick="window.location='/portal'">
+        <span class="sidebar-icon">🏠</span> Main Portal
+      </div>
+      <div class="sidebar-item" onclick="window.location='/'">
+        <span class="sidebar-icon">⭐</span> Star Chat
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- Tab: Dashboard -->
+    <div class="tab-panel active" id="panel-dashboard">
+
+      <div class="section-head">
+        <span class="section-title">My Exchange Dashboard</span>
+        <span class="section-line"></span>
+        <span id="lastUpdated" style="font-family:var(--ff-m);font-size:0.52rem;color:var(--text-dim);letter-spacing:0.1em"></span>
+        <button class="btn-ghost" onclick="loadDashboard()" style="padding:0.4rem 0.8rem">↻ Refresh</button>
+      </div>
+
+      <!-- No exchanges state -->
+      <div class="empty-state" id="emptyState" style="display:none">
+        <div class="empty-icon">📡</div>
+        <div class="empty-title">No Exchanges Configured</div>
+        <p class="empty-text">Add your exchanges to get a personalized dashboard with live prices and cross-exchange signals.</p>
+        <button class="btn-primary" style="margin-top:1rem" onclick="showTab('setup')">Configure My Exchanges →</button>
+      </div>
+
+      <!-- Primary exchange prices -->
+      <div id="primaryPrices">
+        <div class="loading"><div class="spinner"></div>Loading your exchange data...</div>
+      </div>
+
+      <!-- Cross-exchange comparison -->
+      <div id="crossExchangeSection" style="display:none">
+        <div class="section-head" style="margin-top:1rem">
+          <span class="section-title">Cross-Exchange Comparison</span>
+          <span class="section-line"></span>
+        </div>
+        <table class="cross-table" id="crossTable">
+          <thead>
+            <tr>
+              <th>Pair</th>
+              <th id="colPrimary">Primary</th>
+              <th id="colEx2">—</th>
+              <th id="colEx3">—</th>
+              <th>Spread</th>
+              <th>Best Venue</th>
+            </tr>
+          </thead>
+          <tbody id="crossTableBody">
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /panel-dashboard -->
+
+    <!-- Tab: Signals -->
+    <div class="tab-panel" id="panel-signals">
+      <div class="section-head">
+        <span class="section-title">My Exchange Signals</span>
+        <span class="section-line"></span>
+        <button class="btn-ghost" onclick="loadSignals()" style="padding:0.4rem 0.8rem">↻ Refresh</button>
+      </div>
+      <p style="font-size:0.88rem;color:var(--text-dim);font-style:italic;margin-bottom:1.5rem">
+        Signals generated from your configured exchanges. Star prioritizes your primary venue.
+      </p>
+      <div id="signalsList">
+        <div class="loading"><div class="spinner"></div>Generating your personalized signals...</div>
+      </div>
+    </div>
+
+    <!-- Tab: Exchange Setup -->
+    <div class="tab-panel" id="panel-setup">
+      <div class="section-head">
+        <span class="section-title">Exchange Setup</span>
+        <span class="section-line"></span>
+      </div>
+
+      <div class="setup-panel">
+        <div class="setup-head">
+          <span class="setup-title">Select Your Exchanges</span>
+          <span style="font-family:var(--ff-m);font-size:0.55rem;color:var(--text-dim)">Click to select. Click again to set as primary ⭐</span>
+        </div>
+        <div class="setup-body">
+          <div class="exchange-grid" id="exchangeGrid">
+            <!-- Populated by JS -->
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-row">
+              <label>Trading Style</label>
+              <select id="tradingStyle">
+                <option value="signals_only">Signals only — I execute manually</option>
+                <option value="mirror">Mirror trading — Star executes automatically</option>
+                <option value="manual">Manual — I use Star for intelligence only</option>
+                <option value="hybrid">Hybrid — mix of manual and auto</option>
+                <option value="fund_manager">Fund manager — multiple accounts</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Risk Tolerance</label>
+              <select id="riskTolerance">
+                <option value="conservative">Conservative — smaller positions, tight stops</option>
+                <option value="moderate" selected>Moderate — balanced risk/reward</option>
+                <option value="aggressive">Aggressive — larger positions, wider stops</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Preferred Pairs (comma separated)</label>
+            <input type="text" id="preferredPairs" placeholder="BTC, ETH, SOL, AVAX, LINK" value="BTC, ETH, SOL">
+          </div>
+
+          <div id="walletSection">
+            <!-- Wallet fields per selected exchange — populated by JS -->
+          </div>
+
+          <div style="margin-top:1.2rem;display:flex;align-items:center;gap:0.5rem">
+            <button class="btn-primary" onclick="savePrefs()">Save Exchange Profile →</button>
+            <span id="saveResult" style="font-family:var(--ff-m);font-size:0.58rem;color:var(--green);display:none">✓ Saved</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exchange reference table -->
+      <div class="setup-panel">
+        <div class="setup-head">
+          <span class="setup-title">Exchange Reference</span>
+        </div>
+        <div class="setup-body">
+          <table class="cross-table">
+            <thead>
+              <tr>
+                <th>Exchange</th>
+                <th>Type</th>
+                <th>Region</th>
+                <th>Strength</th>
+                <th>Pairs</th>
+              </tr>
+            </thead>
+            <tbody id="exchangeRefTable">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /panel-setup -->
+
+    <!-- Tab: Watchlist -->
+    <div class="tab-panel" id="panel-watchlist">
+      <div class="section-head">
+        <span class="section-title">My Watchlist</span>
+        <span class="section-line"></span>
+      </div>
+
+      <div class="setup-panel">
+        <div class="setup-head">
+          <span class="setup-title">Add to Watchlist</span>
+        </div>
+        <div class="setup-body">
+          <div class="form-grid-2">
+            <div class="form-row">
+              <label>Symbol</label>
+              <input type="text" id="watchSymbol" placeholder="BTC, ETH, SOL...">
+            </div>
+            <div class="form-row">
+              <label>Exchange</label>
+              <select id="watchExchange">
+                <option value="hyperliquid">Hyperliquid</option>
+                <option value="binance">Binance</option>
+                <option value="coinbase">Coinbase</option>
+                <option value="bybit">Bybit</option>
+                <option value="kraken">Kraken</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Alert Above ($)</label>
+              <input type="number" id="alertAbove" placeholder="e.g. 100000">
+            </div>
+            <div class="form-row">
+              <label>Alert Below ($)</label>
+              <input type="number" id="alertBelow" placeholder="e.g. 80000">
+            </div>
+          </div>
+          <button class="btn-primary" onclick="addToWatchlist()">Add to Watchlist →</button>
+        </div>
+      </div>
+
+      <div id="watchlistDisplay">
+        <div class="loading"><div class="spinner"></div>Loading watchlist...</div>
+      </div>
+    </div>
+
+  </main><!-- /main -->
+</div><!-- /portal-grid -->
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const SUB_ID = params.get('sub') || localStorage.getItem('star_sub_id') || 'demo_user';
+const EMAIL  = params.get('email') || localStorage.getItem('star_email') || '';
+let USER_PREFS = {};
+
+const EXCHANGE_META = {
+  binance:     { name:'Binance',     icon:'🟡', type:'CEX', region:'Global', strength:'Largest volume, spot + futures', pairs:'USDT' },
+  coinbase:    { name:'Coinbase',    icon:'🔵', type:'CEX', region:'US/EU',  strength:'Institutional benchmark, USD', pairs:'USD' },
+  bybit:       { name:'Bybit',       icon:'🟠', type:'CEX', region:'Global', strength:'Derivatives + funding data', pairs:'USDT' },
+  kraken:      { name:'Kraken',      icon:'🟣', type:'CEX', region:'EU/US',  strength:'European institutional, EUR', pairs:'USD/EUR' },
+  hyperliquid: { name:'Hyperliquid', icon:'⭐', type:'DEX', region:'On-chain',strength:"Star's native venue", pairs:'USDC' },
+  okx:         { name:'OKX',         icon:'⚫', type:'CEX', region:'Global', strength:'Asian markets, options', pairs:'USDT' },
+  kucoin:      { name:'KuCoin',      icon:'🟢', type:'CEX', region:'Global', strength:'Altcoin selection', pairs:'USDT' },
+  dydx:        { name:'dYdX',        icon:'🔷', type:'DEX', region:'On-chain',strength:'Decentralized perps', pairs:'USDC' },
+};
+
+let selectedExchanges = new Set(['hyperliquid']);
+let primaryExchange   = 'hyperliquid';
+
+// ── Init ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('userEmail').textContent = EMAIL || SUB_ID;
+  buildExchangeGrid();
+  buildExchangeRef();
+  await loadUserPrefs();
+  loadDashboard();
+  loadWatchlist();
+});
+
+// ── Tab switching ──────────────────────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.getElementById(`panel-${tab}`).classList.add('active');
+
+  const map = {dashboard:0, signals:1, setup:2, watchlist:3};
+  document.querySelectorAll('.sidebar-item')[map[tab]]?.classList.add('active');
+  document.getElementById('pageTitle').textContent =
+    {dashboard:'My Exchange Dashboard', signals:'My Signals', setup:'Exchange Setup', watchlist:'Watchlist'}[tab];
+
+  if (tab === 'signals') loadSignals();
+}
+
+// ── Load user preferences ──────────────────────────────────────
+async function loadUserPrefs() {
+  try {
+    const r = await fetch(`/api/prefs/${SUB_ID}`);
+    const d = await r.json();
+    USER_PREFS = d;
+
+    // Apply to tier badge
+    const tier = d.tier || 'observer';
+    const badge = document.getElementById('userTier');
+    badge.textContent = tier.toUpperCase();
+    badge.className = `user-tier tier-${tier}`;
+
+    // Apply to form
+    if (d.exchanges_used?.length) {
+      selectedExchanges = new Set(d.exchanges_used);
+    }
+    if (d.primary_exchange) {
+      primaryExchange = d.primary_exchange;
+    }
+    if (d.trading_style) {
+      document.getElementById('tradingStyle').value = d.trading_style;
+    }
+    if (d.risk_tolerance) {
+      document.getElementById('riskTolerance').value = d.risk_tolerance;
+    }
+    if (d.preferred_pairs?.length) {
+      document.getElementById('preferredPairs').value = d.preferred_pairs.join(', ');
+    }
+
+    refreshExchangeGrid();
+    updateSidebar();
+    buildWalletSection();
+  } catch(e) {
+    console.log('Using defaults:', e);
+  }
+}
+
+// ── Build exchange grid ────────────────────────────────────────
+function buildExchangeGrid() {
+  const grid = document.getElementById('exchangeGrid');
+  grid.innerHTML = '';
+  Object.entries(EXCHANGE_META).forEach(([id, meta]) => {
+    const tile = document.createElement('div');
+    tile.className = `exchange-tile ex-${id}`;
+    tile.id = `tile-${id}`;
+    tile.innerHTML = `
+      <span class="primary-star">⭐</span>
+      <div class="tile-icon">${meta.icon}</div>
+      <div class="tile-name">${meta.name}</div>
+      <div class="tile-type">${meta.type} · ${meta.region}</div>
+      <span class="tile-check">✓</span>`;
+    tile.onclick = () => toggleExchange(id);
+    grid.appendChild(tile);
+  });
+}
+
+function refreshExchangeGrid() {
+  Object.keys(EXCHANGE_META).forEach(id => {
+    const tile = document.getElementById(`tile-${id}`);
+    if (!tile) return;
+    tile.classList.toggle('selected', selectedExchanges.has(id));
+    tile.classList.toggle('primary-selected', id === primaryExchange);
+  });
+}
+
+function toggleExchange(id) {
+  if (selectedExchanges.has(id)) {
+    if (id === primaryExchange) {
+      // Clicking primary again — deselect only if there's another exchange
+      if (selectedExchanges.size > 1) {
+        selectedExchanges.delete(id);
+        primaryExchange = [...selectedExchanges][0];
+      }
+    } else {
+      // Set as primary
+      primaryExchange = id;
+    }
+  } else {
+    selectedExchanges.add(id);
+    if (selectedExchanges.size === 1) primaryExchange = id;
+  }
+  refreshExchangeGrid();
+  buildWalletSection();
+}
+
+function buildWalletSection() {
+  const section = document.getElementById('walletSection');
+  const trading = document.getElementById('tradingStyle').value;
+
+  if (!['mirror','hybrid','fund_manager'].includes(trading)) {
+    section.innerHTML = '';
+    return;
+  }
+
+  const wallets = USER_PREFS.exchange_wallets || {};
+  let html = '<div style="margin-top:0.5rem"><div style="font-family:var(--ff-m);font-size:0.55rem;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:0.6rem">Wallet Addresses (optional)</div>';
+
+  selectedExchanges.forEach(ex => {
+    const meta = EXCHANGE_META[ex];
+    if (!meta) return;
+    const isPrimary = ex === primaryExchange;
+    html += `
+      <div class="form-row">
+        <label>${meta.icon} ${meta.name} Wallet${isPrimary ? ' ⭐ Primary' : ''}</label>
+        <input type="text" id="wallet-${ex}" placeholder="0x... or leave blank"
+               value="${wallets[ex] || ''}" class="ex-${ex}">
+      </div>`;
+  });
+  html += '</div>';
+  section.innerHTML = html;
+}
+
+// ── Save preferences ───────────────────────────────────────────
+async function savePrefs() {
+  const pairs = document.getElementById('preferredPairs').value
+    .split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+
+  const wallets = {};
+  selectedExchanges.forEach(ex => {
+    const input = document.getElementById(`wallet-${ex}`);
+    if (input?.value.trim()) wallets[ex] = input.value.trim();
+  });
+
+  const prefs = {
+    email:            EMAIL,
+    exchanges_used:   [...selectedExchanges],
+    primary_exchange: primaryExchange,
+    exchange_wallets: wallets,
+    trading_style:    document.getElementById('tradingStyle').value,
+    risk_tolerance:   document.getElementById('riskTolerance').value,
+    preferred_pairs:  pairs,
+  };
+
+  try {
+    const r = await fetch(`/api/prefs/${SUB_ID}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(prefs),
+    });
+    const d = await r.json();
+    if (d.success !== false) {
+      USER_PREFS = {...USER_PREFS, ...prefs};
+      updateSidebar();
+      const el = document.getElementById('saveResult');
+      el.style.display = 'inline';
+      setTimeout(() => el.style.display = 'none', 3000);
+      loadDashboard();
+    }
+  } catch(e) {
+    // Demo mode
+    USER_PREFS = {...USER_PREFS, ...prefs};
+    updateSidebar();
+    const el = document.getElementById('saveResult');
+    el.style.display = 'inline';
+    setTimeout(() => el.style.display = 'none', 3000);
+  }
+}
+
+// ── Update sidebar exchange list ───────────────────────────────
+function updateSidebar() {
+  const el = document.getElementById('sidebarExchanges');
+  if (!selectedExchanges.size) {
+    el.innerHTML = '<div style="font-family:var(--ff-m);font-size:0.55rem;color:var(--text-dim);padding:0.4rem;font-style:italic">No exchanges configured</div>';
+    return;
+  }
+  el.innerHTML = '';
+  selectedExchanges.forEach(ex => {
+    const meta = EXCHANGE_META[ex];
+    if (!meta) return;
+    const isPrimary = ex === primaryExchange;
+    const chip = document.createElement('div');
+    chip.className = `exchange-chip ex-${ex}${isPrimary ? ' primary' : ''}`;
+    chip.innerHTML = `
+      <div class="chip-dot"></div>
+      <span class="chip-name">${meta.name}</span>
+      ${isPrimary ? '<span class="chip-primary">PRIMARY</span>' : ''}`;
+    chip.onclick = () => { showTab('setup'); };
+    el.appendChild(chip);
+  });
+}
+
+// ── Load dashboard ─────────────────────────────────────────────
+async function loadDashboard() {
+  const pricesEl = document.getElementById('primaryPrices');
+  const emptyEl  = document.getElementById('emptyState');
+  const crossEl  = document.getElementById('crossExchangeSection');
+
+  const exchanges = USER_PREFS.exchanges_used || [...selectedExchanges];
+  const pairs     = USER_PREFS.preferred_pairs || ['BTC','ETH','SOL'];
+  const primary   = USER_PREFS.primary_exchange || primaryExchange;
+
+  if (!exchanges.length) {
+    emptyEl.style.display = '';
+    pricesEl.innerHTML = '';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  pricesEl.innerHTML = '<div class="loading"><div class="spinner"></div>Fetching live prices from your exchanges...</div>';
+
+  try {
+    const r = await fetch(`/api/prefs/${SUB_ID}/prices`);
+    const d = await r.json();
+
+    const primary_prices = d.primary_prices || {};
+    const all_prices     = d.all_prices || {};
+    const primaryMeta    = EXCHANGE_META[primary] || {};
+
+    // Primary exchange stat cards
+    const pairsToShow = pairs.slice(0,6);
+    let html = `<div class="section-head"><span class="section-title">${primaryMeta.icon || '⭐'} ${primaryMeta.name || primary.title()} — Primary</span><span class="section-line"></span></div>`;
+    html += '<div class="cards-auto">';
+    pairsToShow.forEach(pair => {
+      const data = primary_prices[pair] || {};
+      const price = data.price ? `$${data.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:data.price > 100 ? 2 : 4})}` : '—';
+      const change = data.change_24h;
+      const changeClass = change > 0 ? 'up' : change < 0 ? 'down' : 'flat';
+      const changeStr = change !== undefined ? `${change > 0 ? '+' : ''}${change.toFixed(2)}%` : '—';
+      html += `
+        <div class="stat-card ex-${primary}">
+          <div class="stat-label">
+            ${pair}
+            <span class="stat-ex-badge">${(primaryMeta.name||primary).toUpperCase()}</span>
+          </div>
+          <div class="stat-value">${price}</div>
+          <div class="stat-change ${changeClass}">${changeStr} 24h</div>
+          ${data.volume_24h ? `<div style="font-family:var(--ff-m);font-size:0.5rem;color:var(--text-dim);margin-top:0.3rem">Vol: $${data.volume_24h}M</div>` : ''}
+        </div>`;
+    });
+    html += '</div>';
+    pricesEl.innerHTML = html;
+
+    // Cross-exchange table if multiple exchanges
+    if (exchanges.length > 1) {
+      crossEl.style.display = '';
+      const ex2 = exchanges.find(e => e !== primary) || '';
+      const ex3 = exchanges.find(e => e !== primary && e !== ex2) || '';
+      document.getElementById('colPrimary').textContent = (EXCHANGE_META[primary]?.name || primary);
+      document.getElementById('colEx2').textContent = ex2 ? (EXCHANGE_META[ex2]?.name || ex2) : '—';
+      document.getElementById('colEx3').textContent = ex3 ? (EXCHANGE_META[ex3]?.name || ex3) : '';
+
+      const tbody = document.getElementById('crossTableBody');
+      tbody.innerHTML = '';
+      pairsToShow.forEach(pair => {
+        const pairData = all_prices[pair] || {};
+        const pPrice   = pairData[primary]?.price;
+        const e2Price  = ex2 ? pairData[ex2]?.price : null;
+        const e3Price  = ex3 ? pairData[ex3]?.price : null;
+
+        const prices   = Object.values(pairData).map(d => d.price).filter(Boolean);
+        const maxP     = prices.length ? Math.max(...prices) : 0;
+        const minP     = prices.length ? Math.min(...prices) : 0;
+        const spread   = maxP && minP ? ((maxP - minP) / minP * 100) : 0;
+        const spreadCls = spread > 0.3 ? 'spread-high' : spread > 0.1 ? 'spread-med' : 'spread-low';
+
+        const bestEx   = Object.entries(pairData).reduce((best, [ex, data]) => {
+          return !best || (data.price && data.spread_pct < (pairData[best]?.spread_pct || 99)) ? ex : best;
+        }, '');
+
+        const fmt = p => p ? `$${p.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits: p > 100 ? 2 : 4})}` : '—';
+
+        tbody.innerHTML += `
+          <tr>
+            <td class="symbol-cell">${pair}</td>
+            <td class="primary-cell">${fmt(pPrice)}</td>
+            <td>${fmt(e2Price)}</td>
+            <td>${e3Price !== null ? fmt(e3Price) : ''}</td>
+            <td><span class="spread-badge ${spreadCls}">${spread.toFixed(3)}%</span></td>
+            <td>${bestEx ? `<span class="best-venue">${EXCHANGE_META[bestEx]?.icon||''} ${EXCHANGE_META[bestEx]?.name||bestEx}</span>` : '—'}</td>
+          </tr>`;
+      });
+    } else {
+      crossEl.style.display = 'none';
+    }
+
+    document.getElementById('lastUpdated').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+
+  } catch(e) {
+    pricesEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">Exchange Data Unavailable</div><p class="empty-text">Live price data will load when shekinahstar.io is fully online. DNS propagating.</p></div>`;
+  }
+}
+
+// ── Load signals ───────────────────────────────────────────────
+async function loadSignals() {
+  const el = document.getElementById('signalsList');
+  const exchanges = USER_PREFS.exchanges_used || [...selectedExchanges];
+  const pairs     = (USER_PREFS.preferred_pairs || ['BTC','ETH','SOL']).slice(0,3);
+  const primary   = USER_PREFS.primary_exchange || primaryExchange;
+
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Scanning your exchanges for signals...</div>';
+
+  try {
+    const r = await fetch('/api/exchanges/scan', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({symbols: pairs}),
+    });
+    const d = await r.json();
+
+    let html = '';
+    const results = d.results || {};
+
+    Object.entries(results).forEach(([symbol, data]) => {
+      const div  = data.price_divergence || {};
+      const fund = data.funding_delta    || {};
+
+      if (div.signal && div.signal !== 'insufficient_data') {
+        const dir = div.direction === 'bullish' ? 'bull' : div.direction === 'bearish' ? 'bear' : 'neut';
+        const dirLabel = {bull:'BULLISH', bear:'BEARISH', neut:'NEUTRAL'}[dir];
+        const strength = Math.min(div.spread_pct / 0.5, 1);
+        html += `
+          <div class="signal-item">
+            <span class="signal-dir dir-${dir}">${dirLabel}</span>
+            <div class="signal-body">
+              <div class="signal-title">${symbol} — Cross-Exchange Divergence</div>
+              <div class="signal-detail">${div.interpretation || ''}</div>
+              <div class="signal-meta">SPREAD: ${div.spread_pct?.toFixed(3)}% · PRIMARY: ${(EXCHANGE_META[primary]?.name||primary).toUpperCase()} · VENUES: ${exchanges.map(e=>EXCHANGE_META[e]?.name||e).join(', ')}</div>
+              <div class="strength-bar"><div class="strength-fill" style="width:${strength*100}%;background:${dir==='bull'?'var(--green)':dir==='bear'?'var(--red)':'var(--text-dim)'}"></div></div>
+            </div>
+          </div>`;
+      }
+
+      if (fund.contrarian_signal && fund.contrarian_signal !== 'neutral') {
+        const dir = fund.contrarian_signal === 'bullish' ? 'bull' : 'bear';
+        html += `
+          <div class="signal-item">
+            <span class="signal-dir dir-${dir}">${fund.contrarian_signal.toUpperCase()}</span>
+            <div class="signal-body">
+              <div class="signal-title">${symbol} — Funding Rate Signal (${fund.crowd_bias?.replace('_',' ').toUpperCase()})</div>
+              <div class="signal-detail">${fund.interpretation || ''}</div>
+              <div class="signal-meta">AVG FUNDING: ${fund.avg_rate_pct?.toFixed(4)}%/8HR · ANNUAL: ${fund.annual_rate?.toFixed(1)}% · SQUEEZE RISK: ${fund.squeeze_risk ? 'YES' : 'NO'}</div>
+            </div>
+          </div>`;
+      }
+    });
+
+    if (!html) {
+      html = '<div class="empty-state"><div class="empty-icon">◌</div><div class="empty-title">No Strong Signals</div><p class="empty-text">Markets are in consensus. No significant cross-exchange divergence detected in your pairs right now.</p></div>';
+    }
+
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">Signals Unavailable</div><p class="empty-text">Exchange signal scanning will be available when shekinahstar.io is fully online.</p></div>';
+  }
+}
+
+// ── Watchlist ──────────────────────────────────────────────────
+async function loadWatchlist() {
+  const el = document.getElementById('watchlistDisplay');
+  try {
+    const r = await fetch(`/api/prefs/${SUB_ID}/watchlist`);
+    const d = await r.json();
+    const list = d.watchlist || [];
+    if (!list.length) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">👁</div><div class="empty-title">Empty Watchlist</div><p class="empty-text">Add symbols above to watch prices across your exchanges.</p></div>';
+      return;
+    }
+    let html = '<div class="cards-auto">';
+    list.forEach(item => {
+      const meta = EXCHANGE_META[item.exchange] || {};
+      html += `
+        <div class="stat-card ex-${item.exchange}">
+          <div class="stat-label">${item.symbol} <span class="stat-ex-badge">${(meta.name||item.exchange).toUpperCase()}</span></div>
+          <div class="stat-value">—</div>
+          ${item.alert_above ? `<div style="font-family:var(--ff-m);font-size:0.52rem;color:var(--green);margin-top:0.3rem">Alert ↑ $${item.alert_above.toLocaleString()}</div>` : ''}
+          ${item.alert_below ? `<div style="font-family:var(--ff-m);font-size:0.52rem;color:var(--red);margin-top:0.2rem">Alert ↓ $${item.alert_below.toLocaleString()}</div>` : ''}
+          ${item.notes ? `<div style="font-size:0.78rem;color:var(--text-dim);margin-top:0.3rem;font-style:italic">${item.notes}</div>` : ''}
+        </div>`;
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>Loading watchlist...</div>';
+  }
+}
+
+async function addToWatchlist() {
+  const symbol = document.getElementById('watchSymbol').value.trim().toUpperCase();
+  if (!symbol) return;
+  try {
+    await fetch(`/api/prefs/${SUB_ID}/watchlist`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        symbol,
+        exchange:    document.getElementById('watchExchange').value,
+        alert_above: parseFloat(document.getElementById('alertAbove').value) || null,
+        alert_below: parseFloat(document.getElementById('alertBelow').value) || null,
+      })
+    });
+    document.getElementById('watchSymbol').value = '';
+    document.getElementById('alertAbove').value  = '';
+    document.getElementById('alertBelow').value  = '';
+    loadWatchlist();
+  } catch(e) {
+    alert('Could not add to watchlist');
+  }
+}
+
+// ── Exchange reference table ───────────────────────────────────
+function buildExchangeRef() {
+  const tbody = document.getElementById('exchangeRefTable');
+  Object.entries(EXCHANGE_META).forEach(([id, meta]) => {
+    tbody.innerHTML += `
+      <tr>
+        <td><span class="symbol-cell">${meta.icon} ${meta.name}</span></td>
+        <td><span class="stat-ex-badge">${meta.type}</span></td>
+        <td>${meta.region}</td>
+        <td style="color:var(--text-dim);font-style:italic;font-size:0.78rem">${meta.strength}</td>
+        <td><span style="font-family:var(--ff-m);font-size:0.55rem;color:var(--text-dim)">${meta.pairs}</span></td>
+      </tr>`;
+  });
+}
+</script>
+</body>
+</html>
